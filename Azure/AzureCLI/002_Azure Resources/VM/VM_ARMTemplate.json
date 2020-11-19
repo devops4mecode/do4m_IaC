@@ -1,0 +1,264 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "defaultValue": "southeastasia",
+            "type": "String"
+        },
+        "networkInterfaceName": {
+            "defaultValue": "sea-do4m-vm257",
+            "type": "String"
+        },
+        "networkSecurityGroupName": {
+            "defaultValue": "sea-do4m-vm-nsg",
+            "type": "String"
+        },
+        "networkSecurityGroupRules": {
+            "defaultValue": [
+                {
+                    "name": "RDP",
+                    "properties": {
+                        "priority": 300,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "3389"
+                    }
+                }
+            ],
+            "type": "array"
+            
+        },
+        "subnetName": {
+            "defaultValue": "default",
+            "type": "String"
+        },
+        "virtualNetworkName": {
+            "defaultValue": "sea-do4m-client-rsg-vnet",
+            "type": "String"
+        },
+        "addressPrefixes": {
+            "defaultValue": [
+                "10.0.0.0/24"
+            ],
+            "type": "array"
+        },
+        "subnets": {
+            "defaultValue": [
+                {
+                    "name": "default",
+                    "properties": {
+                        "addressPrefix": "10.0.0.0/24"
+                    }
+                }
+            ],
+            "type": "array"
+        },
+        "publicIpAddressName": {
+            "defaultValue": "sea-do4m-vm-ip",
+            "type": "String"
+        },
+        "publicIpAddressType": {
+            "defaultValue": "Dynamic",
+            "type": "String"
+        },
+        "publicIpAddressSku": {
+            "defaultValue": "Basic",
+            "type": "String"
+        },
+        "virtualMachineName": {
+            "defaultValue": "sea-do4m-vm",
+            "type": "String"
+        },
+        "virtualMachineComputerName": {
+            "defaultValue": "sea-do4m-vm",
+            "type": "String"
+        },
+        "virtualMachineRG": {
+            "defaultValue": "sea-do4m-client-rsg",
+            "type": "String"
+        },
+        "osDiskType": {
+            "defaultValue": "Standard_LRS",
+            "type": "String"
+        },
+        "virtualMachineSize": {
+            "defaultValue": "Standard_D2s_v3",
+            "type": "String"
+        },
+        "adminUsername": {
+            "defaultValue": "do4m-admin",
+            "type": "String"
+        },
+        "adminPassword": {
+            "defaultValue": "xpQZsCAxnk2Dftvr",
+            "type": "secureString"
+        },
+        "patchMode": {
+            "defaultValue": "AutomaticByOS",
+            "type": "string"
+        }
+    },
+    "variables": {
+        "nsgId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]",
+        "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('networkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]",
+                "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
+                "[concat('Microsoft.Network/publicIpAddresses/', parameters('publicIpAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[variables('nsgId')]"
+                }
+            },
+            "tags": {
+                "Description": "Sample VM",
+                "\"Product\"": "do4m",
+                "\"Environment\"": "Test",
+                "\"Stakeholder\"": "\"DevOps4Me\""
+            }
+        },
+        {
+            "name": "[parameters('networkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-02-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": "[parameters('networkSecurityGroupRules')]"
+            },
+            "tags": {
+                "Description": "Sample VM",
+                "\"Product\"": "do4m",
+                "\"Environment\"": "Test",
+                "\"Stakeholder\"": "\"DevOps4Me\""
+            }
+        },
+        {
+            "name": "[parameters('virtualNetworkName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2019-09-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": "[parameters('addressPrefixes')]"
+                },
+                "subnets": "[parameters('subnets')]"
+            },
+            "tags": {
+                "Description": "Sample VM",
+                "\"Product\"": "do4m",
+                "\"Environment\"": "Test",
+                "\"Stakeholder\"": "\"DevOps4Me\""
+            }
+        },
+        {
+            "name": "[parameters('publicIpAddressName')]",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "2019-02-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
+            },
+            "sku": {
+                "name": "[parameters('publicIpAddressSku')]"
+            },
+            "tags": {
+                "Description": "Sample VM",
+                "\"Product\"": "do4m",
+                "\"Environment\"": "Test",
+                "\"Stakeholder\"": "\"DevOps4Me\""
+            }
+        },
+        {
+            "name": "[parameters('virtualMachineName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2020-06-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "createOption": "fromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('osDiskType')]"
+                        }
+                    },
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachineComputerName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "enableAutomaticUpdates": true,
+                        "provisionVmAgent": true,
+                        "patchSettings": {
+                            "patchMode": "[parameters('patchMode')]"
+                        }
+                    }
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            },
+            "tags": {
+                "Description": "Sample VM",
+                "\"Product\"": "do4m",
+                "\"Environment\"": "Test",
+                "\"Stakeholder\"": "\"DevOps4Me\""
+            }
+        }
+    ],
+    "outputs": {
+        "adminUsername": {
+            "type": "string",
+            "value": "[parameters('adminUsername')]"
+        }
+    }
+}

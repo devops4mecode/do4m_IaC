@@ -1,0 +1,138 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptionId": {
+            "defaultValue": "c78ae655-e599-44ee-b71d-c384b359eb81",
+            "type": "string"
+        },
+        "name": {
+            "defaultValue": "do4m-appservice-test",
+            "type": "string"
+        },
+        "location": {
+            "defaultValue": "Southeast Asia",
+            "type": "string"
+        },
+        "hostingPlanName": {
+            "defaultValue": "do4m-appserviceplan-test",
+            "type": "string"
+        },
+        "serverFarmResourceGroup": {
+            "defaultValue": "sea-do4m-client-rsg",
+            "type": "string"
+        },
+        "alwaysOn": {
+            "defaultValue": true,
+            "type": "bool"
+        },
+        "currentStack": {
+            "defaultValue": "dotnetcore",
+            "type": "string"
+        },
+        "phpVersion": {
+            "defaultValue": "OFF",
+            "type": "string"
+        },
+        "errorLink": {
+            "defaultValue": "https://do4m-appservice-test.scm.azurewebsites.net/detectors?type=tools&name=eventviewer",
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('name')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[parameters('location')]",
+            "tags": {
+                "Description": "Resource",
+                "Product": "do4m",
+                "Environment": "Test",
+                "Stakeholder": "DevOps4Me"
+            },
+            "dependsOn": [
+                "microsoft.insights/components/do4m-appservice-test"
+            ],
+            "properties": {
+                "name": "[parameters('name')]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference('microsoft.insights/components/do4m-appservice-test', '2015-05-01').InstrumentationKey]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[reference('microsoft.insights/components/do4m-appservice-test', '2015-05-01').ConnectionString]"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "XDT_MicrosoftApplicationInsights_Mode",
+                            "value": "default"
+                        },
+                        {
+                            "name": "ANCM_ADDITIONAL_ERROR_PAGE_LINK",
+                            "value": "[parameters('errorLink')]"
+                        }
+                    ],
+                    "metadata": [
+                        {
+                            "name": "CURRENT_STACK",
+                            "value": "[parameters('currentStack')]"
+                        }
+                    ],
+                    "phpVersion": "[parameters('phpVersion')]",
+                    "alwaysOn": "[parameters('alwaysOn')]"
+                },
+                "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+                "clientAffinityEnabled": true
+            }
+        },
+        {
+            "apiVersion": "2020-02-02-preview",
+            "name": "do4m-appservice-test",
+            "type": "microsoft.insights/components",
+            "location": "southeastasia",
+            "tags": null,
+            "dependsOn": [
+                "newWorkspaceTemplate"
+            ],
+            "properties": {
+                "ApplicationId": "[parameters('name')]",
+                "Request_Source": "IbizaWebAppExtensionCreate",
+                "Flow_Type": "Redfield",
+                "Application_Type": "web",
+                "WorkspaceResourceId": "/subscriptions/c78ae655-e599-44ee-b71d-c384b359eb81/resourceGroups/DefaultResourceGroup-SEA/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-c78ae655-e599-44ee-b71d-c384b359eb81-SEA"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "name": "newWorkspaceTemplate",
+            "resourceGroup": "DefaultResourceGroup-SEA",
+            "subscriptionId": "[parameters('subscriptionId')]",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "apiVersion": "2020-08-01",
+                            "name": "DefaultWorkspace-c78ae655-e599-44ee-b71d-c384b359eb81-SEA",
+                            "type": "Microsoft.OperationalInsights/workspaces",
+                            "location": "southeastasia",
+                            "properties": {}
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
