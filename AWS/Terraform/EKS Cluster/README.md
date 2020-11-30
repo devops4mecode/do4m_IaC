@@ -6,7 +6,7 @@ Terraform configuration files to provision an EKS cluster on AWS.
 After installing the AWS CLI. Configure it to use your credentials.
 
 ```shell
-$ aws configure
+$ AKIAT5JXKXHZR4377HMC
 AWS Access Key ID [None]: <YOUR_AWS_ACCESS_KEY_ID>
 AWS Secret Access Key [None]: <YOUR_AWS_SECRET_ACCESS_KEY>
 Default region name [None]: <YOUR_AWS_REGION>
